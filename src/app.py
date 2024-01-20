@@ -11,7 +11,7 @@ class App:
         
         self.create_bar()
         self.create_ball()
-        self.create_rect()
+        self.create_rects()
         pyxel.run(self.update, self.draw)
         
     def create_bar(self):
@@ -19,6 +19,7 @@ class App:
         self.y = 100
         self.width = 25
         self.height = 3
+    
     def create_ball(self):
         self.ball_x = 10
         self.ball_y = 10
@@ -26,12 +27,21 @@ class App:
         self.speed = 1.5
         self.ball_dx = 1
         self.ball_dy = 1
-    def create_rect(self):
-        self.rect_x = 10
-        self.rect_y = 3
-        self.rect_width = 8
-        self.rect_height = 3
-
+    
+    def create_rects(self):
+        self.rectangles = []
+        rect_count = 22
+        rect_width = 7
+        space_between_rects = 1
+        
+        total_width = (rect_count -1) * space_between_rects + rect_count * rect_width
+        initial_x = (self.SCREEN_SIZE[0] -total_width)
+        for i in range(rect_count):
+            rect_x = initial_x + i * (rect_width + 1)
+            rect_y = 3
+            rect_height = 3
+            self.rectangles.append({"x": rect_x, "y": rect_y, "width": rect_width, "height": rect_height})
+    
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
@@ -40,6 +50,8 @@ class App:
         # update_ball メソッドを呼び出す
         self.update_ball()
         self.update_gameover()
+        self.update_rects()
+        
     def update_bar(self):
         if pyxel.btn(pyxel.KEY_RIGHT):
             self.x += 1
@@ -61,29 +73,29 @@ class App:
         # ボール壁に当たった場合、反転
         if self.ball_y - self.ball_radius < 0 or self.ball_y + self.ball_radius > pyxel.width:
             self.ball_dy = -self.ball_dy  
-
+        # update_gameover メソッドを呼び出す
     def update_gameover(self):
         if (self.ball_y - self.ball_radius > self.SCREEN_SIZE[1] - 10):
-            pyxel.quit()
-            
-        
-            
-        # update_rect メソッドを呼び出す
-        self.update_rect()    
-    def update_rect(self):      
-        pass
+            pyxel.quit()       
+    def update_rects(self):      
+        for rect in self.rectangles:
+            pass
+    
+    
     def draw(self):
         pyxel.cls(0)
         self.draw_bar()
         self.draw_ball()
-        self.draw_rect()   
+        self.draw_rects()   
+
     def draw_bar(self):
         # 長方形を描画する処理
         pyxel.rect(self.x, self.y, self.width, self.height, 9)
     def draw_ball(self):
-        # ボールを描画する処理
         pyxel.circ(self.ball_x, self.ball_y, self.ball_radius, 9)   
-    def draw_rect(self):
-        # 長方形を描画する処理
-        pyxel.rect(self.rect_x, self.rect_y, self.rect_width, self.rect_height, 9)
+        # ボールを描画する処理
+    def draw_rects(self):
+        for rect in self.rectangles:
+            pyxel.rect(rect["x"], rect["y"], rect["width"],rect["height"],9)
+        # 長方形のブロックを描画する処理
 App()
