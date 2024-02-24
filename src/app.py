@@ -32,7 +32,7 @@ class App:
         speed = 0.5
         ball_dx = 1
         ball_dy = 1
-        self.balls.append({"x": ball_x, "y": ball_y, "dx": ball_dx, "dy": ball_dy, "radius": ball_radius})
+        self.balls.append({"x": ball_x, "y": ball_y, "dx": ball_dx, "dy": ball_dy, "radius": ball_radius, "speed": speed})
     
     def create_rects(self):
         rect_count = 22
@@ -72,32 +72,33 @@ class App:
             self.x -= 1.5
         
     def update_ball(self):
-        self.speed = 0.7
+
         for ball in self.balls:
-            ball["x"] += ball["dx"] * self.speed
-            ball["y"] += ball["dy"] * self.speed
+            ball["x"] += ball["dx"] * ball["speed"]
+            ball["y"] += ball["dy"] * ball["speed"]
             if (ball["y"] + ball["radius"] > self.y
                 and ball["x"] + ball["radius"] > self.x
                 and ball["x"] - ball["radius"] < self.x + self.width
-                and ball["y"] - ball["radius"] < self.y +self.height
-            ):
+                and ball["y"] - ball["radius"] < self.y + self.height):
                 ball["dx"] = -ball["dy"]
             # ボールが壁に当たった場合、反転
             if ball["x"] - ball["radius"] < 0 or ball["x"] + ball["radius"] > pyxel.width:
                 ball["dx"] = -ball["dx"]
             # ボール壁に当たった場合、反転
-            if ball["y"] - ball["radius"] < 0 or ball["y"] + ball["radius"] > pyxel.width:
+            if ball["y"] - ball["radius"] < 0 or ball["y"] + ball["radius"] > pyxel.height:
                 ball["dy"] = -ball["dy"]  
         # update_gameover メソッドを呼び出す
     def update_gameover(self):
-        if (self.ball_y - self.ball_radius > self.SCREEN_SIZE[1] - 10):
-            pyxel.quit()       
+        for ball in self.balls:
+            if (ball["y"] + ball["radius"] > self.SCREEN_SIZE[1] - 10):
+                pyxel.quit()       
         # update_rects(self) メソッドを呼び出す
     def update_rects(self):      
-        for rect in self.rectangles:
-            if rect["x"] <= self.ball_x <= rect["x"] + rect["width"] and rect["y"] <= self.ball_y <= rect["y"] + rect["height"]:
+        for ball in self.balls:
+            for rect in self.rectangles:
+                if rect["x"] <= ball["x"] <= rect["x"] + rect["width"] and rect["y"] <= ball["y"] <= rect["y"] + rect["height"]:
                 self.rectangles.remove(rect)
-                self.ball_dy = -self.ball_dy
+                ball["dy"] = -ball["dy"]
             
         # 描画する処理
     def draw(self):
