@@ -1,7 +1,6 @@
 from typing import Self
 import pyxel
-
-
+import math
 class App:
     def __init__(self):
         self.SCREEN_SIZE = (200,240)
@@ -9,7 +8,6 @@ class App:
         pyxel.init(self.SCREEN_SIZE[0], self.SCREEN_SIZE[1], title="ブロック崩し", fps=self.FPS)
         # pyxel.images[0].load(0, 0, "assets/pyxel_logo_38x16.png")
         self.reset()
-        
         pyxel.run(self.update, self.draw)
         
     def reset(self):
@@ -25,8 +23,8 @@ class App:
     def create_bar(self):
         self.x = 75
         self.y = 200
-        self.width = 80
-        self.height = 10
+        self.width = 40
+        self.height = 3
             
     def create_ball(self):
         ball_x = 100
@@ -40,9 +38,10 @@ class App:
     def create_rects(self):
         rect_count = 22
         rect_width = 20
+        
         space_between_rects = 1
         # ブロック全体の幅を計算し、初期位置を設定
-        total_width = (rect_count - 1) * space_between_rects + rect_count * rect_width
+        total_width = (rect_count) * space_between_rects + rect_count * rect_width
         initial_x = (self.SCREEN_SIZE[0] - total_width)
         
         #　既存のブロックがあれば、それらの座標を更新
@@ -77,35 +76,58 @@ class App:
         
         
     def update_bar(self):
+        min_x = 0
+        max_x = self.SCREEN_SIZE[0] - self.width  # バーが画面外に出ないように調整
         if pyxel.btn(pyxel.KEY_RIGHT):
-            self.x += 2.0
+            self.x = min(max_x, self.x + 2.0)
         if pyxel.btn(pyxel.KEY_LEFT):
-            self.x -= 2.0
+            self.x = max(min_x, self.x - 2.0)
+
         
     def update_ball(self):
         for ball in self.balls:
             
             ball["x"] += ball["dx"] * ball["speed"]
             ball["y"] += ball["dy"] * ball["speed"]
-            if (ball["y"] + ball["radius"] > self.y
-                and ball["x"] + ball["radius"] > self.x
-                and ball["x"] - ball["radius"] < self.x + self.width
-                and ball["y"] - ball["radius"] < self.y + self.height):
-                ball["dy"] = -ball["dy"]
-            # ボールが壁に当たった場合、反転
-            if ball["x"] - ball["radius"] < 0 or ball["x"] + ball["radius"] > pyxel.width:
+            
+            # ボールがバーと衝突した場合の処理
+            if (ball["y"] + ball["radius"] > self.y 
+                and ball["x"] + ball["radius"] > self.x - 1
+                and ball["x"] - ball["radius"] < self.x + self.width + 1
+                and ball["y"] - ball["radius"]  < self.y + self.height):
+                
+                relative_position = (ball["x"] - (self.x + self.width / 2)) / (self.width / 2)
+                
+                # 反射角度を計算
+                reflection_angle = relative_position * math.pi / 4  # 最大角度は60度
+                
+                # ボールの速度ベクトルを更新
+                ball_speed = math.sqrt(ball["dx"] ** 2 + ball["dy"] ** 2)
+                ball["dx"] = ball_speed * math.sin(reflection_angle)
+                ball["dy"] = -ball_speed * math.cos(reflection_angle)
+                
+            
+            
+            # ボールが壁に当たった場合の処理
+            if ball["x"] - ball["radius"] < 0 or ball["x"] + ball["radius"] > self.SCREEN_SIZE[0]:
                 ball["dx"] = -ball["dx"]
                 ball["dy"] *= 1.1 
-            # ボール壁に当たった場合、反転
+            
             if ball["y"] - ball["radius"] < 0:
                 ball["dy"] = -ball["dy"] 
                 ball["dx"] *= 1.1
-        # update_gameover メソッドを呼び出す
+                ball["y"] = ball["radius"]
+            # update_gameover メソッドを呼び出す
+    
+    
+    
+    
     def update_gameover(self):
         for ball in self.balls:
             if all(ball["y"] + ball["radius"] > self.SCREEN_SIZE[1]  for ball in self.balls):
-                
-                pyxel.quit()       
+                self.game_started = False
+                self.reset()
+
         # update_rects(self) メソッドを呼び出す
     #短形ブロック
     def update_rects(self):      
@@ -126,14 +148,17 @@ class App:
         
         # 描画する処理
     def draw(self):
-        pyxel.cls(0)
+        pyxel.cls(1)
         
         if not self.game_started:
             self.draw_start_screen()
+        elif not self.game_started and self.is_gameover():
+            self.draw_gameover_screen()
         else: 
             self.draw_bar()
             self.draw_ball()
             self.draw_rects()
+            self.update_gameover()
             pyxel.text(10,10, f"Points: {self.score}",7)
         
         
@@ -143,20 +168,17 @@ class App:
         # ボールを描画する処理
     def draw_ball(self):
         for ball in self.balls:
-            pyxel.circ(ball["x"], ball["y"], ball["radius"], 3)   
+            pyxel.circ(ball["x"], ball["y"], ball["radius"], 7)   
         # ブロックを描画する処理
     def draw_rects(self):
         for rect in self.rectangles:
             if 0 <= rect["x"] <= self.SCREEN_SIZE[0] and 0 <= rect["y"] <= self.SCREEN_SIZE[1]:
                 pyxel.rect(rect["x"], rect["y"], rect["width"], rect["height"],12)
-    def draw_clear_screen(self):
-        if self.is_game_clear():
-            pyxel.text(self.SCREEN_SIZE[0] // 2 - 40, self.SCREEN_SIZE[1] // 2, "Game Clear!", 7)
-            pyxel.text(self.SCREEN_SIZE[0] // 2 - 60, self.SCREEN_SIZE[1] // 2 + 10, "Press 'Q' to quit", 7)
+    
     def draw_start_screen(self):
         pyxel.text(self.SCREEN_SIZE[0] // 2 - 30, self.SCREEN_SIZE[1] // 2, "block breaker", 11)
         pyxel.text(self.SCREEN_SIZE[0] // 2 - 47, self.SCREEN_SIZE[1] // 2 + 10, "Press 'Enter' to start", 11)
-
+    
     
     
 App()
