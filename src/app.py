@@ -29,31 +29,35 @@ class App:
     def create_ball(self):
         ball_x = 100
         ball_y = 40
-        ball_radius = 5
+        ball_radius = 3
         speed = 1.0
         ball_dx = 1
         ball_dy = 1
         self.balls.append({"x": ball_x, "y": ball_y, "dx": ball_dx, "dy": ball_dy, "radius": ball_radius, "speed": speed})
     
     def create_rects(self):
-        rect_count = 22
-        rect_width = 20
-        
-        space_between_rects = 1
+            
+        row_count = 6  # 行数を増やす
+        rect_count_per_row = 8
+        rect_width = 22
+        rect_height = 5
+        space_between_rects = 2
+
         # ブロック全体の幅を計算し、初期位置を設定
-        total_width = (rect_count) * space_between_rects + rect_count * rect_width
-        initial_x = (self.SCREEN_SIZE[0] - total_width)
-        
-        #　既存のブロックがあれば、それらの座標を更新
-        if 0 < len(self.rectangles):
-            for i in range(len(self.rectangles)):
-                self.rectangles[i]["y"] += 10
-        #　新しいブロックを生成し、リストに追加
-        for i in range(rect_count):
-            rect_x = initial_x + i * (rect_width + 2)
-            rect_y = 3
-            rect_height = 5
-            self.rectangles.append({"x": rect_x, "y": rect_y, "width": rect_width, "height": rect_height})
+        total_width = rect_count_per_row * (rect_width + space_between_rects) - space_between_rects
+        initial_x = (self.SCREEN_SIZE[0] - total_width) // 2
+
+    # 既存のブロックがあれば、それらの座標を更新
+        if len(self.rectangles) > 0:
+            for rect in self.rectangles:
+                rect["y"] += rect_height + space_between_rects  # 現在の行数と間隔分だけY座標を調整
+
+    # 新しいブロックを生成し、リストに追加
+        for row in range(row_count):
+            for i in range(rect_count_per_row):
+                rect_x = initial_x + i * (rect_width + space_between_rects)
+                rect_y = 3 + row * (rect_height + space_between_rects)  # 行ごとにY座標を増やす
+                self.rectangles.append({"x": rect_x, "y": rect_y, "width": rect_width, "height": rect_height})
     
     
     def update(self):
