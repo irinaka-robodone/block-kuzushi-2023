@@ -154,6 +154,7 @@ class App:
                     
                     self.bar_disappeared_count += 1
                     self.score += 1
+                    return
         if self.bar_disappeared_count % 5 == 0 and self.bar_disappeared_count >0:
             
             self.bar_disappeared_count = 0            
@@ -189,7 +190,7 @@ class App:
                 pyxel.rect(rect["x"], rect["y"], rect["width"], rect["height"], rect["color"])
     
     def draw_start_screen(self):
-        pyxel.text(self.SCREEN_SIZE[0] // 2 - 30, self.SCREEN_SIZE[1] // 2, "block breaker", 11)
+        pyxel.text(self.SCREEN_SIZE[0] // 2 - 30, self.SCREEN_SIZE[1] // 2, "Block Breaker", 11)
         pyxel.text(self.SCREEN_SIZE[0] // 2 - 47, self.SCREEN_SIZE[1] // 2 + 10, "Press 'Enter' to start", 11)
     
     
